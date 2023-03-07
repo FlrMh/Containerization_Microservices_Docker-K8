@@ -251,6 +251,7 @@ docker ps
 
 #### !!! Please note: If you do not assign a name to the container, it will receive a random name from `docker`. E.g., in the screenshot attached, the random name assigned is "cranky_dijkstra". 
 
+---
 - If you want to destroy/stop the container, you can do that by running:
 ```
 docker rm <container_id> -f 
@@ -258,5 +259,182 @@ docker rm <container_id> -f
 
 docker stop <container_id>
 # will stop the container from running
+# stops it at that stage, and when you run it again, everything will be the same as the last time you used it (changes are saved)
 ```
 
+- If the container has been stopped and removed, if the image is still available locally, you can run the image again and a new container running the same image will be created.
+
+---
+
+- If we want to communicate with the container, we can actually do that (like an ssh into a VM). We need to make sure the container is running first (which we did using `docker ps`). 
+- There is a potential blocker for `Windows` users, but we will sort that out if it is the case.
+```
+docker exec -it <container id> /bin/bash
+# this might not work, so instead use the following
+
+docker exec -it <conatiner id> sh
+# this command will most likely prompt the need for an alias, such as "winpty" -> this is the Windows blocker that I mentioned earlier
+
+alias docker="winpty docker"
+# this is the command to overcome the blocker
+
+# now attempt to run the command again 
+docker exec -it <conatiner id> sh
+
+# this should prompt "#" at the beginning of the command line = we are inside the container
+
+```
+
+- Once inside the container, we do not know anything about this environment, sp we need to run some commands to find out.
+```
+uname 
+
+uname -a
+```
+- Now that we found out what OS this container has (in my case it is Linux), we can start navigating through it and communicate with it.
+```
+pwd
+# we will most likely be in the root folder (/)
+```
+- This container is going to be an empty machine, as it has no dependencies installed. 
+- So, if we wanted to create a file, we need to use `nano` text editor. However, as this is an empty machine, it won`t even have `nano installed. 
+- Let`s run some commands to establish the internet connection and install some dependencies:
+```
+apt update -y
+
+apt upgrade -y
+
+apt install nano 
+
+
+# let`s navigate to the file that holds the static website information and configuration for the homepage of nginx
+
+cd /usr
+cd share
+cd nginx
+cd html
+ls 
+#should see an index.html file
+
+# now, because we installed nano, let`s change the configuration for the index.html file
+
+nano index.html
+
+
+
+```
+- The default configuration for `index.html` will look like this:
+![](images/index.html-default.PNG)
+
+- I will now make a change to `h1`, so my `index.html` will look like this:
+![](images/index-new.PNG)
+- Save the file (`CTRL+X, Y, Enter`). 
+- Check the file content to make sure the changes are saved:
+```
+cat index.html
+```
+- If your changes are made, go to your browser and type in:
+```
+lohalhost
+```
+- If everything went well, you should see your changes to the `nginx homepage`. 
+![](images/nginx-new-homepage.PNG)
+
+- To leave the controller and return to the localhost, simply run `exit` in the CLI.
+
+---
+## Exercise: Deploy our app in a docker container
+- First, we need to create a new folder `nodejs` in our `docker` folder.
+
+![](images/docker-folder.PNG)
+
+- We need to copy our app folder within the `nodejs` folder, so we can have our app code available.
+- We need to create a new `Dockerfile` within the `nodejs` folder.
+- Within the `Dockerfile` we will put the script for our image so they can be executed when we run the image.
+
+![](images/dockerfile-app.PNG)
+
+- Make sure you are in the right location in the git bash terminal:
+```
+ ls
+
+# should output
+ app/  Dockerfile
+```
+- And now let`s build the image:
+```
+docker build . -t nodeapp
+```
+- This will output:
+```
+[+] Building 26.3s (11/11) FINISHED
+ => [internal] load build definition from Dock  0.0s 
+ => => transferring dockerfile: 334B            0.0s 
+ => [internal] load .dockerignore               0.0s 
+ => => transferring context: 2B                 0.0s 
+ => [internal] load metadata for docker.io/lib  2.1s 
+ => [auth] library/node:pull token for registr  0.0s 
+ => [1/5] FROM docker.io/library/node:latest@  17.9s 
+ => => resolve docker.io/library/node:latest@s  0.0s 
+ => => sha256:fe9a4b9e181a9dd1 7.51kB / 7.51kB  0.0s 
+ => => sha256:83841d113e09345a 1.21kB / 1.21kB  0.0s 
+ => => sha256:5b1b50e1f3f59431 2.21kB / 2.21kB  0.0s 
+ => => sha256:32fb02163b6bb5 55.05MB / 55.05MB  3.6s 
+ => => sha256:167c7feebee855d1 5.17MB / 5.17MB  0.8s 
+ => => sha256:d6dfff1f6f3ddd 10.88MB / 10.88MB  2.4s 
+ => => sha256:e9cdcd4942ebc7 54.59MB / 54.59MB  6.0s 
+ => => sha256:ca3bce705f6 196.81MB / 196.81MB  12.4s 
+ => => sha256:4f4cf292bc62eeea 4.21kB / 4.21kB  3.7s 
+ => => extracting sha256:32fb02163b6bb519a30f9  1.0s 
+ => => sha256:8347f8b4b86bb4 46.16MB / 46.16MB  6.9s 
+ => => extracting sha256:167c7feebee855d117e19  0.1s 
+ => => extracting sha256:d6dfff1f6f3ddd2194ea0  0.1s 
+ => => sha256:c5f20f1b08565a46 2.28MB / 2.28MB  6.3s 
+ => => extracting sha256:e9cdcd4942ebc7445d8a7  1.1s 
+ => => sha256:d220dfa3e18768d4b6be 449B / 449B  6.5s 
+ => => extracting sha256:ca3bce705f6c47c25b6e7  3.6s 
+ => => extracting sha256:4f4cf292bc62eeea8a34b  0.0s 
+ => => extracting sha256:8347f8b4b86bb4cef9be4  1.0s 
+ => => extracting sha256:c5f20f1b08565a46ecc13  0.1s 
+ => => extracting sha256:d220dfa3e18768d4b6bef  0.0s 
+ => [internal] load build context               1.3s 
+ => => transferring context: 27.93MB            1.3s 
+ => [2/5] RUN mkdir -p /app/src                 1.4s 
+ => [3/5] WORKDIR /app/scr                      0.0s 
+ => [4/5] COPY app .                            0.5s 
+ => [5/5] RUN npm install                       3.8s 
+ => exporting to image                          0.4s 
+ => => exporting layers                         0.4s 
+ => => writing image sha256:4a82e2b750c7fa9245  0.0s 
+ => => naming to docker.io/library/nodeapp      0.0s 
+```
+- Let`s check that the image exists:
+```
+docker images
+```
+- You should be able to see the newly vcreated image.
+- And now, we need to run the image and create a container that executes the `Dockerfile`.
+```
+docker run -d -p 3000:3000 nodeapp
+```
+- We are now ready to check our app in the web browser:
+
+![](images/app-available.PNG)
+
+- Once we are sure that the app is working, we can commit the image and push it to our `Docker registry/Docker Hub`. 
+
+```
+docker commit <container id of the app running>  flrmh/node-appjs
+
+docker push flrmh/node-appjs
+```
+- The push command output should look like this, which means that it is creating the repo on `Docker Hub`:
+
+![](images/docker-push.PNG)
+
+- Once ready, you can check on your `Docker Hub` that the repo has been created and it holds the image. 
+- Now, you can easily delete your local image and container and pull it from the `Docker Hub` repo when you need to use it. 
+
+![](images/docker-repo-pull.PNG)
+
+- Happy days! We created an image for our app which will allow us to see the app running each time we run the image and create a container with it. :)
