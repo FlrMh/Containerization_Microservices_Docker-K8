@@ -25,7 +25,10 @@ Virtualization and containerization are two different technologies used to optim
 
 ### 1. Virtualization:
 In virtualization, the hypervisor creates multiple virtual machines, each with its own operating system, to run different applications. 
-- Each VM runs on top of the host's hardware, and the hypervisor manages the allocation of resources such as CPU, memory, and storage to the VMs. - This allows multiple operating systems to run simultaneously on a single physical server, making more efficient use of hardware resources.
+- Each VM runs on top of the host's hardware, and the hypervisor manages the allocation of resources such as CPU, memory, and storage to the VMs. 
+- This allows multiple operating systems to run simultaneously on a single physical server, making more efficient use of hardware resources.
+
+![](images/virtual-diagram.png)
 
 ### 2. Containerization:
 In containerization, the container engine creates multiple containers, each running its own application, on top of a single operating system.
@@ -34,6 +37,7 @@ In containerization, the container engine creates multiple containers, each runn
 
 Overall, virtualization provides greater isolation between applications, while containerization offers greater efficiency and flexibility, especially in the context of cloud computing and microservices architectures.
 
+![](images/container-diagram.png)
 ---
 
 ## Docker architecture
