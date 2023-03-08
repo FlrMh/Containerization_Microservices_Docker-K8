@@ -4,11 +4,17 @@
 ## What is Docker?
 
 ***Docker*** is an open platform for developing, shipping, and running applications. Docker enables you to separate your applications from your infrastructure so you can deliver software quickly.
-- With Docker, you can manage your infrastructure in the same ways you manage your applications. 
-- By taking advantage of Docker’s methodologies for shipping, testing, and deploying code quickly, you can significantly reduce the delay between writing code and running it in production.
+
+
+In other words, Docker is a tool that allows you to run different applications (like web servers, databases, or other software) in an isolated environment on your computer. This isolated environment is called a container.
+
+- Think of a container like a virtual machine, but instead of running a full operating system, it only runs the specific software you want to use. This makes containers much more lightweight and efficient than virtual machines.
+
+
 
 
 ### Benefits:
+
 
 - Can be started within seconds, as a Docker container is just a process running on the operating system.
 - Ensures faster deployment -> With Docker, you do not have to create a new environment and only have to download the Docker image to run on a different server.
