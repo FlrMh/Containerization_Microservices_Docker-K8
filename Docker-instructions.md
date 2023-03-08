@@ -22,6 +22,22 @@ In other words, Docker is a tool that allows you to run different applications (
 - Docker containers require fewer resources, as these are being shared by multiple containers running on the same server.
 - You can install and run Docker on various platforms using Docker images, like Windows, Linux, and macOS.
 
+
+
+---
+
+## Docker and microservices
+
+Docker containers are not considered microservices, but they can be used to deploy and run microservices.
+
+- Microservices = software architecture approach where a complex application is broken down into smaller, independent services that communicate with each other via APIs. Each microservice is responsible for a specific business capability and can be developed, deployed, and scaled independently.
+
+- Docker containers = a way to package software and its dependencies into a portable unit that can be easily distributed and run on any system. 
+Docker containers provide a consistent environment for applications to run in, making it easier to deploy and manage them.
+
+While Docker containers themselves are not microservices, they can be used to deploy and run microservices. In fact, many organizations use Docker containers as part of their microservices architecture because they make it easier to manage and scale the deployment of individual microservices.
+
+
 ---
 
 ## Containerization vs Virtualization
