@@ -11,7 +11,7 @@ In other words, Docker is a tool that allows you to run different applications (
 - Think of a container like a virtual machine, but instead of running a full operating system, it only runs the specific software you want to use. This makes containers much more lightweight and efficient than virtual machines.
 
 
-
+![](images/docker-benefits.png)
 
 ### Benefits:
 
@@ -37,6 +37,7 @@ Docker containers provide a consistent environment for applications to run in, m
 
 While Docker containers themselves are not microservices, they can be used to deploy and run microservices. In fact, many organizations use Docker containers as part of their microservices architecture because they make it easier to manage and scale the deployment of individual microservices.
 
+![](images/microservice.png)
 
 ---
 
