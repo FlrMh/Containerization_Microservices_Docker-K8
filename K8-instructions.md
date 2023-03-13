@@ -213,3 +213,124 @@ kubectl get svc
 NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
 
  ```
+
+ ---
+
+ ## Deploying nginx through pods
+
+ This is what we want to achieve:
+
+ ![](images/replica%20(1).png)
+
+ - Basically, we want to achieve 3 `pods` (basically `containers`) running `nginx` that self-heal(autoscale automatically - once a pod is deleted, the system launches a new one within seconds).
+
+ - In order to achieve this, we need to follow a few steps:
+ 1. Create a file called `nginx-deploy.yml`.
+ 2. Within the file, we need to have the following script:
+ ```YAML
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+  spec:
+    selector:
+      matchLabels:
+        app: nginx
+    replicas: 3
+    template:
+      metadata:
+        labels:
+          app: nginx
+      spec: 
+        containers:
+        - name: nginx
+          image: flrmh/tech201-nginx:v1
+          ports:
+          - containerPort: 80
+ ```
+- Make sure to have correct indentation at all times (2 spaces)!!
+
+---
+
+ Within this file we basically tell `Kubernetes` that we want to create a `Deployment` named `nginx-deployment`. 
+
+ We are also telling `Kubernetes` that we want the pods to have the same name (`label`), which is `nginx`. Also, we want to have 3 `replicas` (`pods`).
+
+ We are specifying the template we want `Kubernetes` to use when launching these `pods`, for automation purposes, which is the `Docker` image we created from `nginx`.
+ - To retrieve your image, simply go to your `Docker Hub` and you should be able to pull the `image` using the pull command available in `Public View` tab (make sure to use the right tag). 
+
+ ![](images/nginx-img.PNG)
+
+ Lastly, we are telling `Kubernetes` which port to assign for the pods (considering they are running the same image, they will use the same port - Autoscaling).
+
+---
+3. To run the `deployment` we need to run the following command:
+
+```
+kubectl create -f nginx-deploy.yml
+
+# the out put should say 
+deployment.apps/nginx-deployment created
+```
+- To check that the deployment has been created we can use the command:
+```
+kubectl get deploy
+```
+- And to check that the `pods` have been created within the deploy, we can run:
+```
+kubectl get pods
+
+# kubectl get all - to print all the existing pods
+```
+-  Once we created the `deployment` file, we also need to be able to communicate with the `pods`, and in order to achieve that we need to create a `Service`. 
+4. To create a `Service`, we need to create a new file, within the same folder as the `nginx-deploy.yml`, where we need the following configuration:
+
+```YAML
+apiVersion: v1
+  kind: Service
+  metadata:
+    name: nginx-svc
+    namespace: default
+  spec:
+    ports:
+    - nodePort: 30001 #range 30000-32768
+      port: 80
+
+      targetPort: 80
+
+    selector: 
+      app: nginx
+
+    type: NodePort
+```
+- Make sure to maintain the indentation correctly throughout the file (2 spaces)!!
+
+---
+Whithin this file we are basically telling `Kubernetes` that we want to create a `Service` named `nginx-service.yml` to communicate with the `pods` from the deployment.
+
+We are also telling `Kubernetes` which port we want to allocate for the communication with the `pods`. This port number is different than the port we allocated the `pods`. 
+- Port 80 is where they interact with the web server, but we can access the `pods` at the port number `30001` (Node Ports are a range between 3000-32768).
+
+Lastly, we are telling `Kubernetes` which pods to select for this deployment (the `pods` with the label `nginx`).
+
+---
+
+5. Run the `nginx-service.yml` using the command:
+```
+kubectl create -f nginx-service.yml
+
+# output should be 
+service/nginx-svc created
+```
+6. We should now be able to see the nginx page at the port number assigned (30001).
+
+![](images/nginx-page.PNG)
+
+- If you want to see the power of `Kubernetes`, try to delete a pod and see how fast it launches a new one. Also, your app will not encounter any downtime due to the autoscaling and self-healing benefits of `Kubernetes`.
+
+```
+# to delete a pod
+
+kubectl delete pod <name of pod>
+
+```
