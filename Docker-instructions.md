@@ -465,3 +465,77 @@ docker push flrmh/node-appjs
 ![](images/docker-repo-pull.PNG)
 
 - Happy days! We created an image for our app which will allow us to see the app running each time we run the image and create a container with it. :)
+
+---
+
+## Docker compose
+- ***Docker Compose*** is a tool that allows you to **define and run multiple Docker containers as a single application**. 
+- It uses a **YAML file (docker-compose.yml)** to specify the configuration of the various containers and their dependencies, making it easier to manage and deploy complex multi-container applications. 
+- With Docker Compose, you can **launch and manage all the services of your application with a single command, rather than having to start and stop each container individually**.
+
+### Let`s create a docker-compose.yml that created our db and app at the same time
+#### Pre-requisits:
+- `Docker` installed
+- `Dockerfile` that containes the config for our app
+
+
+1. Create a `docker-compose.yml` file. In this file we will create the script that will create our db and app. 
+2. Ensure that your folders are in order so you don`t get error re. the poath to the files. 
+
+![](images/folders.PNG)
+
+3. Start writing the script within the `docker-compose.yml`. 
+```YAML
+version: "3"
+services:
+  mongo:
+    image: mongo:4.4
+    container_name: mongo
+    volumes: 
+      - ./app/mongod.conf:/etc/mongod.conf
+    ports:
+      - "27017:27017"
+
+  app:
+    container_name: app
+    restart: always
+    build: ./nodejs
+    ports:
+      - "80:3000" #I used 90 as I already had another container running on port 80
+    links:
+      - mongo
+    environment:
+      - DB_HOST=mongodb://mongo:27017/posts
+
+
+```
+4. Run the `docker-compose` file.
+```
+docker-compose up
+```
+
+
+5. As I did not automate the process of seeding the db, I have to `sh` into the `app` container and run the command to seed the db. 
+```
+alias docker="winpty docker"
+
+docker exec -it <app_container_id> sh
+
+npm install
+
+node seeds/seed.js
+
+
+```
+6. We should now be able to see the `/posts` page.
+
+![](images/app-working.PNG)
+
+- Happy days! We managed to deploy our app and database simultaneously using docker-compose.
+
+### Please note: If you want to take down both containers simultaneously, simply use the following command:
+```
+docker-compose down
+```
+
+
