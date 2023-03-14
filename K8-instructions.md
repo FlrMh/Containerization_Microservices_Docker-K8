@@ -334,3 +334,77 @@ service/nginx-svc created
 kubectl delete pod <name of pod>
 
 ```
+---
+
+## Deploying our nodejs app and mongodb as microservices via Kubernetes
+
+### 1. Deploying our app.
+
+![](images/Blank%20diagram%20(6).png)
+
+- First, to be able to deploy the `cluster for our nodejs`, we need to create the `deployment` and the `service`.
+- We will first create the `deployment`. Create a `nodejs-deploy.yml`, with the following script:
+```YAML
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nodejs-deployment
+  spec:
+    selector:
+      matchLabels:
+        app: nodejs
+    replicas: 3
+    template:
+      metadata:
+        labels:
+          app: nodejs
+      spec:
+        containers:
+        - name: nodejs
+          image: flrmh/node-appjs:latest
+          ports:
+          - containerPort: 3000
+
+```
+- Make sure to use the **image of nodejs we created first, without adding the env variable for the db connection**, as this will not allow us to access the app via web browser. 
+- Run the `nodejs-deploy.tml` file using:
+```
+kubectl create -f nodejs-deploy.yml
+```
+- Now, we need to create the `service`. Create a `nodejs-service.yml` file with the following scripts: 
+```YAML
+  apiVersion: v1
+  kind: Service
+  metadata:
+     name: nodejs-svc
+     namespace: default
+  spec:
+    ports:
+    - nodePort: 30002
+      port: 3000
+
+      targetPort: 3000
+
+    selector: 
+      app: nodejs
+
+    type: NodePort
+```
+- Run the `nodejs-service.yml` using:
+```
+kubectl create -f nodejs-service.yml
+```
+- If both have been created successfully, check the status of the `pods` using:
+```
+kubectl get pods
+
+# the outputs should shouw 3 pods running correctly
+
+NAME                                 READY   STATUS    RESTARTS   AGE
+nodejs-deployment-7b7f6d8d6c-mczp5   1/1     Running   0          34s
+nodejs-deployment-7b7f6d8d6c-pwpfl   1/1     Running   0          34s
+nodejs-deployment-7b7f6d8d6c-qdth9   1/1     Running   0          34s
+```
+- You should now be able to see the app running on the web using `localhost:30002`(or the port number you assigned it in the `nodejs-service.yml`)
+
+![](images/nodejs-deployment-app.PNG)
