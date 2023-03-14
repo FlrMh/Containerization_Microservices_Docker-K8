@@ -338,47 +338,125 @@ kubectl delete pod <name of pod>
 
 ## Deploying our nodejs app and mongodb as microservices via Kubernetes
 
-![](images/task.png)
+![](images/task-diagram.png)
 
-### 1. Deploying our app.
+### 1. ***Deploying our database.***
 
-![](images/Blank%20diagram%20(6).png)
+![](images/db-diagram.png)
 
-- First, to be able to deploy the `cluster for our nodejs`, we need to create the `deployment` and the `service`.
-- We will first create the `deployment`. Create a `nodejs-deploy.yml`, with the following script:
+#### ****Please note: We need to first run the deployment and service for our database so the app can be able to connect to the db (using the env variable).
+
+- First, to be able to deploy the `worker node for our nmongodb`, we need to create the `deployment` and the `service`.
+- We will first create the `deployment`. Create a `mongp-deploy.yml`, with the following script:
+
 ```YAML
+---
   apiVersion: apps/v1
   kind: Deployment
   metadata:
-    name: nodejs-deployment
+    name: mongo
   spec:
     selector:
       matchLabels:
-        app: nodejs
+        app: mongo
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: mongo
+      spec:
+        containers:
+          - name: mongo
+            image: mongo:3.2.20
+            ports:
+            - containerPort: 27017
+```
+
+- Make sure to use the **official image of mongo, specifying the correct version**, as not using the correct image or right version might create issue furhter down the line. 
+- Run the `mongo-deploy.tml` file using:
+```
+kubectl create -f mongo-deploy.yml
+```
+- Now, we need to create the `service`. Create a `mongo-service.yml` file with the following scripts: 
+
+```YAML
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  selector: 
+    app: mongo
+  ports:
+    - port: 27017
+      targetPort: 27017
+```
+- Run the `mongo-service.yml` using:
+```
+kubectl create -f mongo-service.yml
+```
+- If both have been created successfully, check the status of the `pod` using:
+```
+kubectl get pods
+
+# the outputs should shouw 3 pods running correctly
+NAME                             READY   STATUS    RESTARTS   AGE
+mongo-776dc96894-m7zhk           1/1     Running   0          15m
+
+```
+- This means that our `db` is up and running, witing to be seeded and interacted with via our `app`.  
+
+
+---
+
+### 2. ***Deploying our app.***
+
+![](images/Blank%20diagram%20(6).png)
+
+- First, to be able to deploy the `worker node for our nodejs`, we need to create the `deployment` and the `service`.
+- We will first create the `deployment`. Create a `node-deploy.yml`, with the following script:
+```YAML
+---
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: app-deployment
+  spec:
+    selector:
+      matchLabels:
+        app: node-app
     replicas: 3
     template:
       metadata:
         labels:
-          app: nodejs
+          app: node-app
       spec:
         containers:
-        - name: nodejs
-          image: flrmh/node-appjs:latest
+        - name: node-app
+          image: flrmh/app-sparta:latest
           ports:
           - containerPort: 3000
-
+          env:
+          - name: DB_HOST
+            value: mongodb://mongo:27017/posts
+          lifecycle:
+            postStart:
+              exec:
+                command: ["node", "seeds/seed.js"]
 ```
 - Make sure to use the **image of nodejs we created first, without adding the env variable for the db connection**, as this will not allow us to access the app via web browser. 
-- Run the `nodejs-deploy.tml` file using:
+- Run the `node-deploy.yml` file using:
 ```
-kubectl create -f nodejs-deploy.yml
+kubectl create -f node-deploy.yml
 ```
-- Now, we need to create the `service`. Create a `nodejs-service.yml` file with the following scripts: 
+- Now, we need to create the `service`. Create a `node-service.yml` file with the following scripts: 
 ```YAML
+---
   apiVersion: v1
   kind: Service
   metadata:
-     name: nodejs-svc
+     name: app-svc
      namespace: default
   spec:
     ports:
@@ -388,13 +466,13 @@ kubectl create -f nodejs-deploy.yml
       targetPort: 3000
 
     selector: 
-      app: nodejs
+      app: node-app
 
     type: NodePort
 ```
-- Run the `nodejs-service.yml` using:
+- Run the `node-service.yml` using:
 ```
-kubectl create -f nodejs-service.yml
+kubectl create -f node-service.yml
 ```
 - If both have been created successfully, check the status of the `pods` using:
 ```
@@ -402,11 +480,18 @@ kubectl get pods
 
 # the outputs should shouw 3 pods running correctly
 
-NAME                                 READY   STATUS    RESTARTS   AGE
-nodejs-deployment-7b7f6d8d6c-mczp5   1/1     Running   0          34s
-nodejs-deployment-7b7f6d8d6c-pwpfl   1/1     Running   0          34s
-nodejs-deployment-7b7f6d8d6c-qdth9   1/1     Running   0          34s
+NAME                             READY   STATUS    RESTARTS   AGE
+app-deployment-fffc8bb48-ngvv5   1/1     Running   0          14m
+app-deployment-fffc8bb48-nthw2   1/1     Running   0          13m
+app-deployment-fffc8bb48-qgt95   1/1     Running   0          14m
+
 ```
-- You should now be able to see the app running on the web using `localhost:30002`(or the port number you assigned it in the `nodejs-service.yml`)
+- You should now be able to see the app running on the web using `localhost:30002`(or the port number you assigned it in the `node-service.yml`, in my case `30002`)
 
 ![](images/nodejs-deployment-app.PNG)
+
+- We should also be able to see the `posts` page in the browser, which will showcase the connection of the `app` with the `db` and the successful seeding of the `db` when the app was launched. 
+
+![](images/posts.PNG)
+---
+
