@@ -338,6 +338,8 @@ kubectl delete pod <name of pod>
 
 ## Deploying our nodejs app and mongodb as microservices via Kubernetes
 
+![](images/task.png)
+
 ### 1. Deploying our app.
 
 ![](images/Blank%20diagram%20(6).png)
